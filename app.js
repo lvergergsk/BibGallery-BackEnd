@@ -1,19 +1,15 @@
-var express = require('express');
-var app = express();
+const express = require('express');
+const cors = require('cors');
+const app = express();
 
-var port = process.env.PORT || 3000;
+const testQuery=require('./testQuery')
 
-app.get('/', function (req, res) {
-    res.send('<html><head><h1>Connected...</h1></head></html>')
-});
 
-app.get('/person/:id', function (req, res) {
-    res.send('<html><head><h1>Person: ' + req.params.id + '</h1></head></html>')
-})
+const port = process.env.PORT || 3001;
 
-app.get('/api', function (req, res) {
-    res.json({firstname: 'Michael', lastname: 'Zhang'})
-});
+app.use(cors());
+
+app.get('/testDbQuery',testQuery.testQueryHandler);
 
 console.log("Listening...")
 app.listen(port);
