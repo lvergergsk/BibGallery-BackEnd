@@ -1,10 +1,8 @@
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 
-module.exports = function createJWTToken(details) {
-    if (typeof details !== 'object') {
-        details = {}
-    }
+let createJWTToken = function (username) {
+    let details = {};
 
     if (!details.maxAge || typeof details.maxAge !== 'number') {
         details.maxAge = 3600
@@ -18,9 +16,12 @@ module.exports = function createJWTToken(details) {
     }, {});
 
     return jwt.sign({
-        data: details.sessionData
+        username: username,
+        // data: details.sessionData
     }, process.env.JWT_SECRET, {
         expiresIn: details.maxAge,
         algorithm: 'HS256'
     })
-}
+};
+
+module.exports = createJWTToken;
