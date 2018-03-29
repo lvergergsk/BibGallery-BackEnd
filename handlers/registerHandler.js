@@ -1,7 +1,9 @@
 'use strict';
-const connection = require("./connection");
-var bcrypt = require('bcrypt');
+const connection = require("../db/connection");
+const bcrypt = require('bcrypt');
 const async = require('async');
+const createJWTToken = require('../auth/createJWTToken')
+
 
 const registerQuery = function (username, hash, email, conn, cb) {
     conn.execute(`INSERT INTO users (USERNAME, HASH, EMAIL) VALUES (:username, :hash,:email)`,
@@ -34,7 +36,8 @@ const registerHandler = function (req, res) {
                 } else {
                     res.status(200).json(
                         {
-                            success: true
+                            success: true,
+                            JWT: createJWTToken(req.body.username)
                         }
                     )
 
@@ -46,4 +49,4 @@ const registerHandler = function (req, res) {
     });
 };
 
-module.exports.registerHandler = registerHandler;
+module.exports = registerHandler;

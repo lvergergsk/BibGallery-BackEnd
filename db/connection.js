@@ -31,6 +31,10 @@ const exampleQuery = function (conn, cb) {
     })
 };
 
+module.exports.doconnect = doconnect;
+module.exports.dorelease = dorelease;
+
+// Example:
 // async.waterfall(
 //     [
 //         doconnect,
@@ -44,6 +48,3 @@ const exampleQuery = function (conn, cb) {
 //         if (conn)
 //             dorelease(conn);
 //     });
-
-module.exports.doconnect = doconnect;
-module.exports.dorelease = dorelease;
