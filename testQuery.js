@@ -1,5 +1,5 @@
 const oracledb = require('oracledb');
-const dbConfig = require('./dbconfig');
+const dbConfig = require('./db/dbConfig');
 
 const testQuery =
     "SELECT * FROM\n" +
