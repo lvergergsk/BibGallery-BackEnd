@@ -1,6 +1,6 @@
 var async = require('async');
 var oracledb = require('oracledb');
-var dbConfig = require('./dbconfig.js');
+var dbConfig = require('./db/dbConfig.js');
 
 var doconnect = function (cb) {
     oracledb.getConnection(
