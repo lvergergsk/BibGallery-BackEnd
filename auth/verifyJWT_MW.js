@@ -1,19 +1,20 @@
 const verifyJWTToken = require('./verifyJWTToken');
 
-const verifyJWT_MW = function (req, res, next) {
+const authorize = function (req, res, cb) {
     let token = (req.method === 'POST') ? req.body.token : req.query.token
 
     verifyJWTToken(token)
         .then((decodedToken) => {
             req.user = decodedToken.data
-            next()
+            cb()
         })
         .catch((err) => {
+            console.log(err);
             res.status(400)
                 .json({message: "Invalid auth token provided."})
         })
 };
 
-module.exports = verifyJWT_MW;
+module.exports = authorize;
 
 
