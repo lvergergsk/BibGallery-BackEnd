@@ -8,7 +8,9 @@ const checkUser = function (username, conn, cb) {
         [username],
         {autoCommit: true},
         function (err, result) {
-            hash = result.rows[0][0];
+            let hash;
+            if (result.rows[0] != null)
+                hash = result.rows[0][0];
             if (err) {
                 return cb(err, conn);
             } else {
@@ -19,7 +21,9 @@ const checkUser = function (username, conn, cb) {
 
 const compareHash = function (password, hash, conn, cb) {
     bcrypt.compare(password, hash, function (err, res) {
-        if (err) {
+        if (!hash) {
+            return cb(null, false, conn)
+        } else if (err) {
             return cb(err, false, conn);
         } else {
             return cb(null, res, conn);
