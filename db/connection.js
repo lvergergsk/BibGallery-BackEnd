@@ -1,34 +1,34 @@
-"use strict";
+'use strict';
 
 // const async = require('async');
-const oracledb = require("oracledb");
+const oracledb = require('oracledb');
 const dbConfig = require('./dbConfig.js');
 
-const doconnect = function (cb) {
+const doconnect = function(cb) {
     oracledb.getConnection(
         {
             user: dbConfig.user,
             password: dbConfig.password,
             connectString: dbConfig.connectString
         },
-        cb);
+        cb
+    );
 };
 
-const dorelease = function (conn) {
-    conn.close(function (err) {
-        if (err)
-            console.error(err.message);
+const dorelease = function(conn) {
+    conn.close(function(err) {
+        if (err) console.error(err.message);
     });
 };
 
-const exampleQuery = function (conn, cb) {
-    conn.execute(`SELECT owner,table_name FROM all_tables`, function (err, result) {
-        if (err) return (err, conn)
+const exampleQuery = function(conn, cb) {
+    conn.execute(`SELECT owner,table_name FROM all_tables`, function(err, result) {
+        if (err) return err, conn;
         else {
             console.log(result.rows);
-            return (null, cb);
+            return null, cb;
         }
-    })
+    });
 };
 
 module.exports.doconnect = doconnect;
