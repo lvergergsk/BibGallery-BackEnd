@@ -28,6 +28,7 @@
     "oracledb": "^2.0.15"
   },
   "devDependencies": {
-    "cors": "^2.8.4"
+    "cors": "^2.8.4",
+    "prettier": "1.11.1"
   }
 }
