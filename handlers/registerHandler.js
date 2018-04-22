@@ -6,7 +6,9 @@ const createJWTToken = require('../auth/createJWTToken');
 
 const registerQuery = function(username, hash, email, conn, cb) {
     conn.execute(
-        `INSERT INTO users (USERNAME, HASH, EMAIL) VALUES (:username, :hash,:email)`, [username, hash, email], {
+        `INSERT INTO users (USERNAME, HASH, EMAIL) VALUES (:username, :hash,:email)`,
+        [username, hash, email],
+        {
             autoCommit: true
         },
         function(err, result) {

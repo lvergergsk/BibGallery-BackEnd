@@ -4,6 +4,10 @@
 const oracledb = require('oracledb');
 const dbConfig = require('./dbConfig.js');
 
+oracledb.autoCommit = true;
+oracledb.maxRows = 50;
+oracledb.outFormat = oracledb.OBJECT;
+
 const doconnect = function(cb) {
     oracledb.getConnection(
         {
