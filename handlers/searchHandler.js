@@ -45,6 +45,9 @@ const handles = {
             if (body.params['person']) {
                 queryBuilder += pattern.nameTab.append;
             }
+            if (body.params['personid']) {
+                queryBuilder += pattern.personTab.append;
+            }
             if (body.params['journal']) {
                 queryBuilder += pattern.articleTab.append;
             }
@@ -62,6 +65,9 @@ const handles = {
             }
             if (body.params['person']) {
                 queryBuilder += pattern.nameTab.person;
+            }
+            if (body.params['personid']) {
+                queryBuilder += pattern.personTab.person;
             }
             if (body.params['journal']) {
                 queryBuilder += pattern.articleTab.article;
@@ -89,21 +95,34 @@ const handles = {
                     }
                 }
             }
-            queryBuilder += pattern.searchType[body.type].end;
+            // queryBuilder += pattern.searchType[body.type];
             cb(null, queryBuilder, body.params);
         }
     ],
+
+    countRecord: ['buildQuery', 'connectDB', function([queryBuilder, params], conn, cb){
+        // console.log(pattern.count.begin+queryBuilder+pattern.count.end);
+        conn.execute(pattern.count.begin+queryBuilder+pattern.count.end, params, (err, result) => {
+            if (err) {
+                cb(err);
+            } else {
+                console.log(result['rows']);
+                cb(null, result['rows'][0]["CNT"]);
+            }
+        });
+    }],
 
     findPerson: [
         'buildQuery',
         'connectDB',
         function([queryBuilder, params], conn, cb) {
-            console.log(queryBuilder + pattern.refine.author);
-            conn.execute(queryBuilder + pattern.refine.author, params, (err, perResult) => {
+            // console.log(pattern.refine.author.begin + pattern.page.begin + queryBuilder + pattern.page.end + pattern.refine.author.end);
+            conn.execute(pattern.refine.author.begin + pattern.page.begin + queryBuilder + pattern.page.end + pattern.refine.author.end, params, (err, result) => {
                 if (err) {
                     cb(err);
                 } else {
-                    cb(null, perResult['rows']);
+                    console.log("Person Found.");
+                    cb(null, result['rows']);
                 }
             });
         }
@@ -118,7 +137,45 @@ const handles = {
                 (error, result) =>
                     async.mapValues(
                         result,
-                        (v, k, callback) => async.map(v, (x, c) => c(null, x['AUTHOR']), callback),
+                        (v, k, callback) => async.map(v, (x, c) => c(null, {NAME: x['AUTHOR'], ID: x["AUTHOR_ID"]}), callback),
+                        cb
+                    )
+            );
+        }
+    ],
+
+    findCitation: [
+        'buildQuery',
+        function([queryBuilder, params], cb) {
+            connectionFactory.doconnect(
+                (error, conn) => {
+                    if(error)
+                        cb(error);
+                    else {
+                        conn.execute(pattern.refine.citation.begin + pattern.page.begin + queryBuilder + pattern.page.end + pattern.refine.citation.end, params, (err, result) => {
+                            connectionFactory.dorelease(conn);
+                            if (err) {
+                                cb(err);
+                            } else {
+                                console.log("Citation Found.");
+                                cb(null, result['rows']);
+                            }
+                        });
+                    }
+                });
+        }
+    ],
+
+    refineCitation: [
+        'findCitation',
+        function(citations, cb) {
+            async.groupBy(
+                citations,
+                (x, c) => c(null, x['RN']),
+                (error, result) =>
+                    async.mapValues(
+                        result,
+                        (v, k, callback) => async.map(v, (x, c) => c(null, x['CITATION']), callback),
                         cb
                     )
             );
@@ -128,29 +185,43 @@ const handles = {
     doQuery: [
         'buildQuery',
         'getPubType',
-        'connectDB',
-        function([queryBuilder, params], pubTypeList, conn, cb) {
+        function([queryBuilder, params], pubTypeList, cb) {
             const refine = function(pubType, callback) {
-                console.log(
-                    queryBuilder +
-                        pattern.refine.pubbegin +
-                        pubType.toUpperCase() +
-                        pattern.refine.pubend
-                );
-                conn.execute(
-                    queryBuilder +
-                        pattern.refine.pubbegin +
-                        pubType.toUpperCase() +
-                        pattern.refine.pubend,
-                    params,
-                    (err, result) => {
-                        if (err) {
-                            callback(err);
+                // console.log(
+                //         pattern.refine.pub.begin +
+                //         pubType.toUpperCase() +
+                //         pattern.refine.pub.mid +
+                //         pattern.page.begin +
+                //         queryBuilder +
+                //         pattern.page.end +
+                //         pattern.refine.pub.end
+                // );
+                connectionFactory.doconnect(
+                    (error, conn) => {
+                        if(error) {
+                            cb(error);
                         } else {
-                            callback(null, result['rows']);
+                            conn.execute(
+                                pattern.refine.pub.begin +
+                                    pubType.toUpperCase() +
+                                    pattern.refine.pub.mid +
+                                    pattern.page.begin +
+                                    queryBuilder +
+                                    pattern.page.end +
+                                    pattern.refine.pub.end,
+                                params,
+                                (err, result) => {
+                                    connectionFactory.dorelease(conn);
+                                    if (err) {
+                                        callback(err);
+                                    } else {
+                                        console.log("PubType Found");
+                                        callback(null, result['rows']);
+                                    }
+                                }
+                            );
                         }
-                    }
-                );
+                    });
             };
             async.map(pubTypeList, refine, (err, results) => {
                 cb(err, _.flatten(results));
@@ -160,12 +231,14 @@ const handles = {
 
     combineResult: [
         'refinePerson',
+        'refineCitation',
         'doQuery',
-        function(people, pubs, cb) {
+        function(people, citations, pubs, cb) {
             async.map(
                 pubs,
                 (x, c) => {
                     x['AUTHOR'] = people[x['RN']];
+                    x['CITATION'] = citations[x['RN']];
                     c(null, x);
                 },
                 cb
@@ -195,6 +268,7 @@ const searchHandler = function(req, res) {
         } else {
             res.status(200).json({
                 success: true,
+                count: qResult.countRecord,
                 result: qResult.disconnectDB
             });
         }

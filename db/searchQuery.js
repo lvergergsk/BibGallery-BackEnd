@@ -1,12 +1,10 @@
 module.exports = {
     searchType: {
         pub: {
-            begin: `WITH TOTTAB AS (SELECT RN,PUBLICATION_ID AS ID,TITLE,YEAR,TYPE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(SELECT MAIN.* FROM "YOULYU".PUBLICATION MAIN`,
-            end: `)MAIN WHERE ROWNUM <= :offset+:num)WHERE RN > :offset)`
+            begin: `SELECT MAIN.* FROM "YOULYU".PUBLICATION MAIN`,
         },
         per: {
-            begin: `WITH TOTTAB AS (SELECT RN,PUBLICATION_ID AS ID,TITLE,YEAR,TYPE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(SELECT MAIN.* FROM "YOULYU".PERSON MAIN`,
-            end: `)MAIN)WHERE RN BETWEEN :offset+1 AND :offset+:num)`
+            begin: `SELECT MAIN.* FROM "YOULYU".PERSON MAIN`,
         }
     },
     whereClause: ` WHERE(1=1)`,
@@ -23,7 +21,11 @@ module.exports = {
     },
     nameTab: {
         append: `,"YOULYU".PUBLISH,"YOULYU".NAME`,
-        person: `AND(REGEXP_LIKE(NAME.PERSON_NAME,:person,'i')AND(PUBLISH.PERSON_ID=NAME.PERSON_ID)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID))`
+        person: `AND(REGEXP_LIKE(NAME.PERSON_NAME,:person,'i'))AND(PUBLISH.PERSON_ID=NAME.PERSON_ID)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID)`
+    },
+    personTab: {
+        append: `,"YOULYU".PUBLISH`,
+        person: `AND(PERSON_ID=:personid)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID)`
     },
     articleTab: {
         append: `,"YOULYU".ARTICLE ART`,
@@ -50,12 +52,33 @@ module.exports = {
             DESC: ` DESC`
         }
     },
+    count: {
+        begin: `SELECT COUNT(*) AS CNT FROM(`,
+        end: `)WHERE :offset+:num<>0`
+    },
+    page: {
+        begin: `(SELECT RN,PUBLICATION_ID AS ID,TITLE,YEAR,TYPE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`,
+        perbegin: `SELECT RN,PERSON_ID AS ID,AFFILIATION,HOMEPAGE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`,
+        end: `)MAIN WHERE ROWNUM <= :offset+:num)WHERE RN > :offset)MAIN`
+    },
     refine: {
-        pubbegin: `SELECT * FROM TOTTAB, "YOULYU".`,
-        pubend: ` MAIN WHERE TOTTAB.ID = MAIN.PUBLICATION_ID`,
-        author: `SELECT RN,MIN(NAM.PERSON_NAME) AS AUTHOR FROM TOTTAB,"YOULYU".PUBLISH MAIN,"YOULYU".PERSON PER,"YOULYU".NAME NAM\
-        WHERE TOTTAB.ID = MAIN.PUBLICATION_ID AND MAIN.PERSON_ID = PER.PERSON_ID AND PER.PERSON_ID = NAM.PERSON_ID
-        GROUP BY TOTTAB.RN, PER.PERSON_ID`
+        pub:{
+            begin: `SELECT * FROM "YOULYU".`,
+            mid: ` PUB,`,
+            end: ` WHERE MAIN.ID = PUB.PUBLICATION_ID`,
+        },
+        citation: {
+            begin: `SELECT RN, PUB.TITLE AS CITATION FROM`,
+            end: `,"YOULYU".CITE, "YOULYU".PUBLICATION PUB\
+        WHERE MAIN.ID = CITE.PREDECESSOR AND CITE.SUCCESSOR = PUB.PUBLICATION_ID
+        GROUP BY MAIN.RN, PUB.TITLE`
+        },
+        author: {
+            begin: `SELECT RN,MIN(NAME.PERSON_NAME) AS AUTHOR, PER.PERSON_ID AS AUTHOR_ID FROM`,
+            end: `,"YOULYU".PUBLISH PUB,"YOULYU".PERSON PER,"YOULYU".NAME\
+        WHERE MAIN.ID = PUB.PUBLICATION_ID AND PUB.PERSON_ID = PER.PERSON_ID AND PER.PERSON_ID = NAME.PERSON_ID
+        GROUP BY MAIN.RN, PER.PERSON_ID`
+        }
     },
     notImp: {
         qPubTitleByKeyword: [
