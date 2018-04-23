@@ -1,4 +1,4 @@
-const testHandler = function (req, res) {
+const testHandler = function(req, res) {
     if (!req.user) return res.sendStatus(401);
     console.log(req.user);
     res.status(200).json({

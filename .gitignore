@@ -1,3 +1,4 @@
 /node_modules
 /.idea
-/db/dbConfig.js
+db/dbConfig.js
+*.orig
