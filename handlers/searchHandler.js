@@ -19,9 +19,7 @@ const handles = {
     getPubType: [
         'getBody',
         function(body, cb) {
-            let pubTypeList = _.uniq(
-                _.map(_.filter(body.pubtype, x => pattern.pubType[x]), x => x.toUpperCase())
-            );
+            let pubTypeList = _.uniq(_.filter(body.pubtype, x => pattern.pubType[x]));
             if (pubTypeList.length == 0) {
                 pubTypeList = pattern.allPubType;
             }
@@ -59,7 +57,7 @@ const handles = {
             queryBuilder += pattern.whereClause;
             if (pubTypeList.length < 5) {
                 queryBuilder += pattern.pubType.begin;
-                queryBuilder.concat(..._.map(pubTypeList, x => pattern.pubType[x]));
+                queryBuilder += "".concat(..._.map(pubTypeList, x => pattern.pubType[x]));
                 queryBuilder += pattern.pubType.end;
             }
             if (body.params['person']) {
