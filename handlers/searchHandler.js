@@ -53,7 +53,7 @@ const handles = {
             if (body.params['proceedingid']) {
                 queryBuilder += pattern.inproceedingTab.append;
             }
-            if (body.params['incollectionid']) {
+            if (body.params['bookid']) {
                 queryBuilder += pattern.incollectionTab.append;
             }
             queryBuilder += pattern.whereClause;
@@ -71,7 +71,7 @@ const handles = {
             if (body.params['proceedingid']) {
                 queryBuilder += pattern.inproceedingTab.inproceeding;
             }
-            if (body.params['incollectionid']) {
+            if (body.params['bookid']) {
                 queryBuilder += pattern.incollectionTab.incollection;
             }
             if (body.params['yearbegin']) {

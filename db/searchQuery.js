@@ -31,7 +31,7 @@ module.exports = {
     },
     incollection: {
         append: `,"YOULYU".INCOLLECTION INC`,
-        incollection: `AND(INP.CROSSREF=:collectionid)AND(INC.PUBLICATION_ID=PUB.PUBLICATION_ID)`
+        incollection: `AND(INP.CROSSREF=:bookid)AND(INC.PUBLICATION_ID=PUB.PUBLICATION_ID)`
     },
     year: {
         begin: `AND(YEAR>=:yearbegin)`,
