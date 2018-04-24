@@ -146,12 +146,14 @@ const handles = {
         'buildQuery',
         'connectDB',
         function([queryBuilder, params], conn, cb) {
-            console.log('Count: ' + pattern.count.begin + queryBuilder + pattern.count.end);
             conn.execute(
                 pattern.count.begin + queryBuilder + pattern.count.end,
                 params,
                 (err, result) => {
                     if (err) {
+                        console.log(
+                            'Count: ' + pattern.count.begin + queryBuilder + pattern.count.end
+                        );
                         cb(err);
                     } else {
                         console.log(result['rows']);
@@ -176,23 +178,11 @@ const handles = {
         'getPubType',
         function(bodyType, [queryBuilder, params], pubTypeList, cb) {
             const refine = function(pubType, callback) {
-                console.log(
-                    pubType +
-                        ': ' +
-                        // pattern.refine.pub.begin +
-                        // pubType.toUpperCase() +
-                        pattern.refine.pub[pubType] +
-                        queryBuilder +
-                        pattern.refine.pub.end[bodyType]
-                );
                 connectionFactory.doconnect((error, conn) => {
                     if (error) {
                         callback(error);
                     } else {
                         conn.execute(
-                            // pattern.refine.pub.begin +
-                            //     pubType.toUpperCase() +
-                            //     pattern.refine.pub.mid +
                             pattern.refine.pub[pubType] +
                                 queryBuilder +
                                 pattern.refine.pub.end[bodyType],
@@ -200,6 +190,13 @@ const handles = {
                             (err, result) => {
                                 connectionFactory.dorelease(conn);
                                 if (err) {
+                                    console.log(
+                                        pubType +
+                                            ': ' +
+                                            pattern.refine.pub[pubType] +
+                                            queryBuilder +
+                                            pattern.refine.pub.end[bodyType]
+                                    );
                                     callback(err);
                                 } else {
                                     console.log(pubType.toUpperCase() + ' Found');
@@ -230,12 +227,16 @@ const handles = {
         'paginateQuery',
         'connectDB',
         function(bodyType, [queryBuilder, params], conn, cb) {
-            // console.log(pattern.refine.author.begin + pattern.page.begin + queryBuilder + pattern.page.end + pattern.refine.author.end);
             conn.execute(
                 pattern.opposite.begin[bodyType] + queryBuilder + pattern.opposite.end[bodyType],
                 params,
                 (err, result) => {
                     if (err) {
+                        console.log(
+                            pattern.opposite.begin[bodyType] +
+                                queryBuilder +
+                                pattern.opposite.end[bodyType]
+                        );
                         cb(err);
                     } else {
                         console.log('Opposite entity found.');
@@ -278,13 +279,16 @@ const handles = {
                 if (error) cb(error);
                 else {
                     conn.execute(
-                        pattern.ego.begin[bodyType] +
-                            queryBuilder +
-                            pattern.ego.end[bodyType],
+                        pattern.ego.begin[bodyType] + queryBuilder + pattern.ego.end[bodyType],
                         params,
                         (err, result) => {
                             connectionFactory.dorelease(conn);
                             if (err) {
+                                console.log(
+                                    pattern.ego.begin[bodyType] +
+                                        queryBuilder +
+                                        pattern.ego.end[bodyType]
+                                );
                                 cb(err);
                             } else {
                                 console.log('Ego attribute found.');
@@ -307,7 +311,11 @@ const handles = {
                     async.mapValues(
                         result,
                         (v, k, callback) =>
-                            async.map(v, (x, c) => c(null, {NAME: x['EGO'], ID: x['EGO_ID']}), callback),
+                            async.map(
+                                v,
+                                (x, c) => c(null, { NAME: x['EGO'], ID: x['EGO_ID'] }),
+                                callback
+                            ),
                         cb
                     )
             );
@@ -322,17 +330,17 @@ const handles = {
         'paginateQuery',
         'connectDB',
         function(bodyType, [queryBuilder, params], conn, cb) {
-            console.log('Company: ' +
-                        pattern.company.begin[bodyType] +
-                        queryBuilder +
-                        pattern.company.end[bodyType]);
             conn.execute(
-                pattern.company.begin[bodyType] +
-                    queryBuilder +
-                    pattern.company.end[bodyType],
+                pattern.company.begin[bodyType] + queryBuilder + pattern.company.end[bodyType],
                 params,
                 (err, result) => {
                     if (err) {
+                        console.log(
+                            'Company: ' +
+                                pattern.company.begin[bodyType] +
+                                queryBuilder +
+                                pattern.company.end[bodyType]
+                        );
                         cb(err);
                     } else {
                         console.log('Company attribute found.');
@@ -353,7 +361,11 @@ const handles = {
                     async.mapValues(
                         result,
                         (v, k, callback) =>
-                            async.map(v, (x, c) => c(null, {NAME: x['COMP'], ID: x['COMP_ID']}), callback),
+                            async.map(
+                                v,
+                                (x, c) => c(null, { NAME: x['COMP'], ID: x['COMP_ID'] }),
+                                callback
+                            ),
                         cb
                     )
             );
