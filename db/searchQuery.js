@@ -105,7 +105,7 @@ module.exports = {
                 pub: ` WHERE MAIN.ID=PUB.PUBLICATION_ID`,
                 per: ` WHERE MAIN.ID=PER.PERSON_ID`
             }
-        },
+        }
     },
     ego: {
         attribute: {
@@ -113,18 +113,18 @@ module.exports = {
             per: `SYNONYM`
         },
         begin: {
-            pub: `SELECT RN,PUB.TITLE AS EGO PUB.PUBLICATION_ID AS EGO_ID FROM`,
+            pub: `SELECT RN,PUB.TITLE AS EGO,PUB.PUBLICATION_ID AS EGO_ID FROM`,
             per: `SELECT RN,NAME.PERSON_NAME AS EGO,NAME.PERSON_ID AS EGO_ID FROM`
         },
         end: {
-            pub: `,"YOULYU".CITE,"YOULYU".PUBLICATION PUB WHERE MAIN.ID=CITE.PREDECESSOR AND CITE.SUCCESSOR=PUB.PUBLICATION_ID GROUP BY MAIN.RN,PUB.TITLE`,
+            pub: `,"YOULYU".CITE,"YOULYU".PUBLICATION PUB WHERE MAIN.ID=CITE.PREDECESSOR AND CITE.SUCCESSOR=PUB.PUBLICATION_ID`,
             per: `,"YOULYU".NAME WHERE MAIN.ID=NAME.PERSON_ID`
         }
     },
     opposite: {
         entity: {
             pub: `AUTHOR`,
-            per: `PUBLICATION`,
+            per: `PUBLICATION`
         },
         begin: {
             pub: `SELECT RN,MIN(NAME.PERSON_NAME) AS OPPO_NAME, PER.PERSON_ID AS OPPO_ID FROM`,
@@ -145,7 +145,7 @@ module.exports = {
             per: `SELECT RN,MIN(NAME.PERSON_NAME)AS COMP,NAME.PERSON_ID AS COMP_ID FROM`
         },
         end: {
-            pub: `,"YOULYU".CITE,"YOULYU".PUBLICATION PUB WHERE MAIN.ID=CITE.SUCCESSOR AND CITE.PREDECESSOR=PUB.PUBLICATION_ID GROUP BY MAIN.RN,PUB.TITLE`,
+            pub: `,"YOULYU".CITE,"YOULYU".PUBLICATION PUB WHERE MAIN.ID=CITE.SUCCESSOR AND CITE.PREDECESSOR=PUB.PUBLICATION_ID`,
             per: `,"YOULYU".PUBLISH,"YOULYU".NAME WHERE(MAIN.ID=PUBLISH.PERSON_ID)AND(PUBLISH.PERSON_ID=NAME.PERSON_ID)GROUP BY MAIN.RN,NAME.PERSON_ID`
         }
     }
