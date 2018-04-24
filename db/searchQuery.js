@@ -54,15 +54,15 @@ module.exports = {
     },
     articleTab: {
         append: `,"YOULYU".ARTICLE ART`,
-        article: `AND(ART.JOURNAL=:journal)AND(ART.PUBLICATION_ID=MAIN.PUBLICATION_ID)`
+        article: `AND(MAIN.PUBLICATION_ID IN(SELECT PUBLICATION_ID FROM "YOULYU".ARTICLE WHERE JOURNAL=:journal))`
     },
     inproceedingTab: {
         append: `,"YOULYU".INPROCEEDING INP`,
-        inproceeding: `AND(((INP.CROSSREF=:proceedingid)AND(INP.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:proceedingid))`
+        inproceeding: `AND((MAIN.PUBLICATION_ID IN(SELECT PUBLICATION_ID FROM "YOULYU".INPROCEEDING WHERE CROSSREF=:proceedingid))OR(MAIN.PUBLICATION_ID=:proceedingid))`
     },
     incollectionTab: {
         append: `,"YOULYU".INCOLLECTION INC`,
-        incollection: `AND(((INC.CROSSREF=:bookid)AND(INC.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:bookid))`
+        incollection: `AND((MAIN.PUBLICATION_ID IN(SELECT PUBLICATION_ID FROM "YOULYU".INCOLLECTION WHERE CROSSREF=:bookid))OR(MAIN.PUBLICATION_ID=:bookid))`
     },
     year: {
         begin: `AND(YEAR>=:yearbegin)`,
