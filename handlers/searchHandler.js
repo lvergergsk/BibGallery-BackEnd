@@ -403,7 +403,7 @@ const handles = {
 };
 
 const searchHandler = function(req, res) {
-    // if (!req.user) res.sendStatus(401);
+    if (!req.user) res.sendStatus(401);
     handles.getBody = cb => cb(null, req.body);
     async.autoInject(handles, (err, qResult) => {
         if (err) {

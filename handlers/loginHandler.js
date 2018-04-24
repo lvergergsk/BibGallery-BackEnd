@@ -3,14 +3,14 @@ const async = require('async');
 const createJWTToken = require('../auth/createJWTToken');
 const bcrypt = require('bcrypt');
 
-const checkUser = function(username, conn, cb) {
+const checkUser = function (username, conn, cb) {
     conn.execute(
         `SELECT HASH FROM YOULYU.USERS WHERE YOULYU.USERS.USERNAME=:username`,
         [username],
-        { autoCommit: true },
-        function(err, result) {
+        {autoCommit: true},
+        function (err, result) {
             let hash;
-            if (result.rows[0] != null) hash = result.rows[0][0];
+            if (result.rows[0] != null) hash = result.rows[0].HASH;
             if (err) {
                 return cb(err, conn);
             } else {
@@ -20,8 +20,8 @@ const checkUser = function(username, conn, cb) {
     );
 };
 
-const compareHash = function(password, hash, conn, cb) {
-    bcrypt.compare(password, hash, function(err, res) {
+const compareHash = function (password, hash, conn, cb) {
+    bcrypt.compare(password, hash, function (err, res) {
         if (!hash) {
             return cb(null, false, conn);
         } else if (err) {
@@ -32,14 +32,14 @@ const compareHash = function(password, hash, conn, cb) {
     });
 };
 
-const loginHandler = function(req, res) {
+const loginHandler = function (req, res) {
     async.waterfall(
         [
             connection.doconnect,
             async.apply(checkUser, req.body.username),
             async.apply(compareHash, req.body.password)
         ],
-        function(err, success, conn) {
+        function (err, success, conn) {
             if (err) {
                 console.error('In waterfall error cb: ==>', err, '<==');
                 res.status(400).json({

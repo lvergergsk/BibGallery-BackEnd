@@ -22,7 +22,7 @@ app.use(bodyParser.json());
 app.post('/login', loginHandler);
 app.post('/register', registerHandler);
 app.get('/protected', jwt({ secret: process.env.JWT_SECRET }), testHandler);
-app.post('/search', searchHandler);
+app.post('/search',jwt({ secret: process.env.JWT_SECRET }), searchHandler);
 app.get('/landing',landingPangeInfoHandler);
 
 console.log('Listening...');
