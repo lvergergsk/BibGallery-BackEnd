@@ -4,11 +4,15 @@ module.exports = {
             begin: `SELECT MAIN.* FROM "YOULYU".PUBLICATION MAIN`,
         },
         per: {
-            begin: `SELECT MAIN.* FROM "YOULYU".PERSON MAIN`,
+            begin: `SELECT MAIN.PERSON_ID FROM "YOULYU".PUBLISH MAIN`,
+            end: `GROUP BY MAIN.PERSON_ID`
         }
     },
     whereClause: ` WHERE(1=1)`,
-    title: `AND(REGEXP_LIKE(TITLE,:title,'i'))`,
+    title: {
+        pub: `AND(REGEXP_LIKE(TITLE,:title,'i'))`,
+        per: `AND(REGEXP_LIKE(PUB.TITLE,:title,'i'))AND(PUB.PUBLICATION_ID=MAIN.PUBLICATION_ID)`
+    },
     allPubType: ['article', 'inproceeding', 'incollection', 'proceeding', 'book'],
     pubType: {
         begin: `AND((0=1)`,
@@ -19,13 +23,34 @@ module.exports = {
         book: `OR(TYPE='book')`,
         end: `)`
     },
-    nameTab: {
-        append: `,"YOULYU".PUBLISH,"YOULYU".NAME`,
-        person: `AND(REGEXP_LIKE(NAME.PERSON_NAME,:person,'i'))AND(PUBLISH.PERSON_ID=NAME.PERSON_ID)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID)`
+    publicationID: {
+        join: `AND(MAIN.PUBLICATION_ID=:publicationid)`,
     },
-    personTab: {
+    personID: {
+        pub: `AND(PUBLISH.PERSON_ID=:personid)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID)`,
+        per: `AND(MAIN.PERSON_ID=:personid)`
+    },
+    publicationTab: {
+        append: `,"YOULYU".PUBLICATION PUB`,
+        join: {
+            publication: `AND(PUBLISH.PUBLICATION_ID=PUB.PUBLICATION_ID)`
+        }
+    },
+    nameTab: {
+        append: {
+            pub: `,"YOULYU".PUBLISH,"YOULYU".NAME`,
+            per: `,"YOULYU".NAME`
+        },
+        join: {
+            pub: `AND(REGEXP_LIKE(NAME.PERSON_NAME,:person,'i'))AND(PUBLISH.PERSON_ID=NAME.PERSON_ID)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID)`,
+            per: `AND(REGEXP_LIKE(NAME.PERSON_NAME,:person,'i'))AND(NAME.PERSON_ID=PUBLISH.PERSON_ID)`
+        }
+    },
+    publishTab: {
         append: `,"YOULYU".PUBLISH`,
-        person: `AND(PERSON_ID=:personid)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID)`
+        join: {
+            publication: `AND(MAIN.PUBLICATION_ID=PUB.PUBLICATION_ID)`,
+        }
     },
     articleTab: {
         append: `,"YOULYU".ARTICLE ART`,
@@ -33,11 +58,11 @@ module.exports = {
     },
     inproceedingTab: {
         append: `,"YOULYU".INPROCEEDING INP`,
-        inproceeding: `AND(INP.CROSSREF=:proceedingid)AND(INP.PUBLICATION_ID=MAIN.PUBLICATION_ID)`
+        inproceeding: `AND(((INP.CROSSREF=:proceedingid)AND(INP.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:proccedingid))`
     },
-    incollection: {
+    incollectionTab: {
         append: `,"YOULYU".INCOLLECTION INC`,
-        incollection: `AND(INP.CROSSREF=:bookid)AND(INC.PUBLICATION_ID=MAIN.PUBLICATION_ID)`
+        incollection: `AND(((INP.CROSSREF=:bookid)AND(INC.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:bookid))`
     },
     year: {
         begin: `AND(YEAR>=:yearbegin)`,
@@ -45,7 +70,10 @@ module.exports = {
     },
     order: {
         type: {
-            year: `ORDER BY MAIN.YEAR`
+            year: {
+                pub: `ORDER BY MAIN.YEAR`,
+                per: ` ORDER BY MAX(PUB.YEAR)`
+            }
         },
         order: {
             ASC: ` ASC`,
@@ -54,18 +82,29 @@ module.exports = {
     },
     count: {
         begin: `SELECT COUNT(*) AS CNT FROM(`,
-        end: `)WHERE :offset+:num<>0`
+        end: `)WHERE :offset+:num<>0` // need :offset and :num to match params.
     },
     page: {
-        begin: `(SELECT RN,PUBLICATION_ID AS ID,TITLE,YEAR,TYPE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`,
-        perbegin: `SELECT RN,PERSON_ID AS ID,AFFILIATION,HOMEPAGE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`,
+        begin: {
+            pub: `(SELECT RN,PUBLICATION_ID AS ID,TITLE,YEAR,TYPE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`,
+            per: `(SELECT RN,PERSON_ID AS ID FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`
+        },
         end: `)MAIN WHERE ROWNUM <= :offset+:num)WHERE RN > :offset)MAIN`
     },
     refine: {
         pub:{
+            article:`SELECT MAIN.*,JOURNAL,PAGES,VOLUME,EE,URL FROM "YOULYU".ARTICLE PUB,`,
+            inproceeding:`SELECT MAIN.*,BOOKTITLE,EE,URL,CROSSREF FROM "YOULYU".INPROCEEDING PUB,`,
+            incollection:`SELECT MAIN.*,BOOKTITLE,PAGES,EE,URL,CROSSREF FROM "YOULYU".INCOLLECTION PUB,`,
+            proceeding:`SELECT MAIN.*,BOOKTITLE,VOLUME,PUBLISHER,ISBN,EE,URL FROM "YOULYU".PROCEEDING PUB,`,
+            book:`SELECT MAIN.*,PAGES,VOLUME,SERIES,PUBLISHER,ISBN,EE,URL FROM "YOULYU".BOOK PUB,`,
+            person: `SELECT MAIN.*,AFFILIATION,HOMEPAGE FROM "YOULYU".PERSON PER,`,
             begin: `SELECT * FROM "YOULYU".`,
             mid: ` PUB,`,
-            end: ` WHERE MAIN.ID = PUB.PUBLICATION_ID`,
+            end: {
+                pub: ` WHERE MAIN.ID=PUB.PUBLICATION_ID`,
+                per: ` WHERE MAIN.ID=PER.PERSON_ID`
+            }
         },
         citation: {
             begin: `SELECT RN, PUB.TITLE AS CITATION FROM`,
@@ -79,20 +118,5 @@ module.exports = {
         WHERE MAIN.ID = PUB.PUBLICATION_ID AND PUB.PERSON_ID = PER.PERSON_ID AND PER.PERSON_ID = NAME.PERSON_ID
         GROUP BY MAIN.RN, PER.PERSON_ID`
         }
-    },
-    notImp: {
-        qPubTitleByKeyword: [
-            `SELECT PUB.* FROM "YOULYU".PUBLICATION PUB, (SELECT ROWNUM AS RN, PUBLICATION_ID AS ID  FROM "YOULYU".PUBLICATION\
-    WHERE TITLE LIKE '%'||:keyword||'%' AND ROWNUM <= :offset + :num) PID \
-    WHERE PID.RN > :offset AND PID.ID = PUB.PUBLICATION_ID`,
-            `SELECT PUB.* FROM "YOULYU".PUBLICATION PUB, (SELECT ROWNUM AS RN, PUBLICATION_ID AS ID  FROM "YOULYU".PUBLICATION\
-    WHERE TITLE LIKE '%'||:keyword||'%' AND ROWNUM <= :offset + :num) PID \
-    WHERE PID.RN > :offset AND PID.ID = PUB.PUBLICATION_ID`
-        ],
-        // `SELECT PUB.* FROM "YOULYU".PUBLICATION PUB, (SELECT ROWNUM as RN, PUBLICATION_ID as ID FROM "YOULYU".PUBLICATION WHERE TITLE LIKE '%'||:keyword||'%' AND ROWNUM <= :offset + :num) PID;`,
-        // WHERE PID.RN > :offset AND PID.ID = PUB.PUBLICATION_ID;`,
-        qPerNameByKeyword: `SELECT PER.* FROM "YOULYU".PERSON PER, (SELECT ROWNUM AS RN, PERSON_ID AS ID FROM "YOULYU".NAME\
-    WHERE PERSON_NAME LIKE '%'||:keyword||'%' AND ROWNUM <= :offset + :num) PID \
-    WHERE PID.RN > :offset AND PID.ID = PER.PERSON_ID`
     }
 };
