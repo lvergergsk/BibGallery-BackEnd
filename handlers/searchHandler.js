@@ -170,100 +170,6 @@ const handles = {
         }
     ],
 
-    findPerson: [
-        'getBodyType',
-        'paginateQuery',
-        'connectDB',
-        function(bodyType, [queryBuilder, params], conn, cb) {
-            // console.log(pattern.refine.author.begin + pattern.page.begin + queryBuilder + pattern.page.end + pattern.refine.author.end);
-            if (bodyType == 'per') {
-                cb(null, []);
-            } else {
-                conn.execute(
-                    pattern.refine.author.begin + queryBuilder + pattern.refine.author.end,
-                    params,
-                    (err, result) => {
-                        if (err) {
-                            cb(err);
-                        } else {
-                            console.log('Person Found.');
-                            cb(null, result['rows']);
-                        }
-                    }
-                );
-            }
-        }
-    ],
-
-    refinePerson: [
-        'findPerson',
-        function(people, cb) {
-            async.groupBy(
-                people,
-                (x, c) => c(null, x['RN']),
-                (error, result) =>
-                    async.mapValues(
-                        result,
-                        (v, k, callback) =>
-                            async.map(
-                                v,
-                                (x, c) => c(null, { NAME: x['AUTHOR'], ID: x['AUTHOR_ID'] }),
-                                callback
-                            ),
-                        cb
-                    )
-            );
-        }
-    ],
-
-    findCitation: [
-        'getBodyType',
-        'paginateQuery',
-        function(bodyType, [queryBuilder, params], cb) {
-            if (bodyType == 'per') {
-                cb(null, []);
-            } else {
-                connectionFactory.doconnect((error, conn) => {
-                    if (error) cb(error);
-                    else {
-                        conn.execute(
-                            pattern.refine.citation.begin +
-                                queryBuilder +
-                                pattern.refine.citation.end,
-                            params,
-                            (err, result) => {
-                                connectionFactory.dorelease(conn);
-                                if (err) {
-                                    cb(err);
-                                } else {
-                                    console.log('Citation Found.');
-                                    cb(null, result['rows']);
-                                }
-                            }
-                        );
-                    }
-                });
-            }
-        }
-    ],
-
-    refineCitation: [
-        'findCitation',
-        function(citations, cb) {
-            async.groupBy(
-                citations,
-                (x, c) => c(null, x['RN']),
-                (error, result) =>
-                    async.mapValues(
-                        result,
-                        (v, k, callback) =>
-                            async.map(v, (x, c) => c(null, x['CITATION']), callback),
-                        cb
-                    )
-            );
-        }
-    ],
-
     doQuery: [
         'getBodyType',
         'paginateQuery',
@@ -316,16 +222,157 @@ const handles = {
         }
     ],
 
+    /**
+     * Find opposite entity. Find people for publications, and find publications for people.
+     */
+    findOpposite: [
+        'getBodyType',
+        'paginateQuery',
+        'connectDB',
+        function(bodyType, [queryBuilder, params], conn, cb) {
+            // console.log(pattern.refine.author.begin + pattern.page.begin + queryBuilder + pattern.page.end + pattern.refine.author.end);
+            conn.execute(
+                pattern.opposite.begin[bodyType] + queryBuilder + pattern.opposite.end[bodyType],
+                params,
+                (err, result) => {
+                    if (err) {
+                        cb(err);
+                    } else {
+                        console.log('Opposite entity found.');
+                        cb(null, result['rows']);
+                    }
+                }
+            );
+        }
+    ],
+
+    refineOpposite: [
+        'findOpposite',
+        function(opposites, cb) {
+            async.groupBy(
+                opposites,
+                (x, c) => c(null, x['RN']),
+                (error, result) =>
+                    async.mapValues(
+                        result,
+                        (v, k, callback) =>
+                            async.map(
+                                v,
+                                (x, c) => c(null, { NAME: x['OPPO_NAME'], ID: x['OPPO_ID'] }),
+                                callback
+                            ),
+                        cb
+                    )
+            );
+        }
+    ],
+
+    /**
+     * Find ego attribute that recognize its citation for publications, and its name for people.
+     */
+    findEgo: [
+        'getBodyType',
+        'paginateQuery',
+        function(bodyType, [queryBuilder, params], cb) {
+            connectionFactory.doconnect((error, conn) => {
+                if (error) cb(error);
+                else {
+                    conn.execute(
+                        pattern.ego.begin[bodyType] +
+                            queryBuilder +
+                            pattern.ego.end[bodyType],
+                        params,
+                        (err, result) => {
+                            connectionFactory.dorelease(conn);
+                            if (err) {
+                                cb(err);
+                            } else {
+                                console.log('Ego attribute found.');
+                                cb(null, result['rows']);
+                            }
+                        }
+                    );
+                }
+            });
+        }
+    ],
+
+    refineEgo: [
+        'findEgo',
+        function(egos, cb) {
+            async.groupBy(
+                egos,
+                (x, c) => c(null, x['RN']),
+                (error, result) =>
+                    async.mapValues(
+                        result,
+                        (v, k, callback) =>
+                            async.map(v, (x, c) => c(null, {NAME: x['EGO'], ID: x['EGO_ID']}), callback),
+                        cb
+                    )
+            );
+        }
+    ],
+
+    /**
+     * Find company attribute that recognize its citation for publications, and its name for people.
+     */
+    findCompany: [
+        'getBodyType',
+        'paginateQuery',
+        'connectDB',
+        function(bodyType, [queryBuilder, params], conn, cb) {
+            console.log('Company: ' +
+                        pattern.company.begin[bodyType] +
+                        queryBuilder +
+                        pattern.company.end[bodyType]);
+            conn.execute(
+                pattern.company.begin[bodyType] +
+                    queryBuilder +
+                    pattern.company.end[bodyType],
+                params,
+                (err, result) => {
+                    if (err) {
+                        cb(err);
+                    } else {
+                        console.log('Company attribute found.');
+                        cb(null, result['rows']);
+                    }
+                }
+            );
+        }
+    ],
+
+    refineCompany: [
+        'findCompany',
+        function(companies, cb) {
+            async.groupBy(
+                companies,
+                (x, c) => c(null, x['RN']),
+                (error, result) =>
+                    async.mapValues(
+                        result,
+                        (v, k, callback) =>
+                            async.map(v, (x, c) => c(null, {NAME: x['COMP'], ID: x['COMP_ID']}), callback),
+                        cb
+                    )
+            );
+        }
+    ],
+
     combineResult: [
-        'refinePerson',
-        'refineCitation',
+        'getBodyType',
+        'refineOpposite',
+        'refineEgo',
+        'refineCompany',
         'doQuery',
-        function(people, citations, pubs, cb) {
+        function(bodyType, opposites, egos, companies, pubs, cb) {
             async.map(
                 pubs,
                 (x, c) => {
-                    x['AUTHOR'] = people[x['RN']];
-                    x['CITATION'] = citations[x['RN']];
+                    x[pattern.opposite.entity[bodyType]] = opposites[x['RN']];
+                    x[pattern.ego.attribute[bodyType]] = egos[x['RN']];
+                    x[pattern.company.attribute[bodyType]] = companies[x['RN']];
                     c(null, x);
                 },
                 cb

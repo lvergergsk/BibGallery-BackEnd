@@ -106,17 +106,47 @@ module.exports = {
                 per: ` WHERE MAIN.ID=PER.PERSON_ID`
             }
         },
-        citation: {
-            begin: `SELECT RN, PUB.TITLE AS CITATION FROM`,
-            end: `,"YOULYU".CITE, "YOULYU".PUBLICATION PUB\
-        WHERE MAIN.ID = CITE.PREDECESSOR AND CITE.SUCCESSOR = PUB.PUBLICATION_ID
-        GROUP BY MAIN.RN, PUB.TITLE`
+    },
+    ego: {
+        attribute: {
+            pub: `CITATION`,
+            per: `SYNONYM`
         },
-        author: {
-            begin: `SELECT RN,MIN(NAME.PERSON_NAME) AS AUTHOR, PER.PERSON_ID AS AUTHOR_ID FROM`,
-            end: `,"YOULYU".PUBLISH PUB,"YOULYU".PERSON PER,"YOULYU".NAME\
-        WHERE MAIN.ID = PUB.PUBLICATION_ID AND PUB.PERSON_ID = PER.PERSON_ID AND PER.PERSON_ID = NAME.PERSON_ID
-        GROUP BY MAIN.RN, PER.PERSON_ID`
+        begin: {
+            pub: `SELECT RN,PUB.TITLE AS EGO PUB.PUBLICATION_ID AS EGO_ID FROM`,
+            per: `SELECT RN,NAME.PERSON_NAME AS EGO,NAME.PERSON_ID AS EGO_ID FROM`
+        },
+        end: {
+            pub: `,"YOULYU".CITE,"YOULYU".PUBLICATION PUB WHERE MAIN.ID=CITE.PREDECESSOR AND CITE.SUCCESSOR=PUB.PUBLICATION_ID GROUP BY MAIN.RN,PUB.TITLE`,
+            per: `,"YOULYU".NAME WHERE MAIN.ID=NAME.PERSON_ID`
+        }
+    },
+    opposite: {
+        entity: {
+            pub: `AUTHOR`,
+            per: `PUBLICATION`,
+        },
+        begin: {
+            pub: `SELECT RN,MIN(NAME.PERSON_NAME) AS OPPO_NAME, PER.PERSON_ID AS OPPO_ID FROM`,
+            per: `SELECT RN,PUB.TITLE AS OPPO_NAME, PUB.PUBLICATION_ID AS OPPO_ID FROM`
+        },
+        end: {
+            pub: `,"YOULYU".PUBLISH PUB,"YOULYU".PERSON PER,"YOULYU".NAME WHERE(MAIN.ID=PUB.PUBLICATION_ID)AND(PUB.PERSON_ID=PER.PERSON_ID)AND(PER.PERSON_ID=NAME.PERSON_ID)GROUP BY MAIN.RN, PER.PERSON_ID`,
+            per: `,"YOULYU".PUBLICATION PUB,"YOULYU".PUBLISH WHERE(MAIN.ID=PUBLISH.PERSON_ID)AND(PUBLISH.PUBLICATION_ID=PUB.PUBLICATION_ID)`
+        }
+    },
+    company: {
+        attribute: {
+            pub: `CITEDBY`,
+            per: `COAUTHOR`
+        },
+        begin: {
+            pub: `SELECT RN,PUB.TITLE AS COMP,PUB.PUBLICATION_ID AS COMP_ID FROM`,
+            per: `SELECT RN,MIN(NAME.PERSON_NAME)AS COMP,NAME.PERSON_ID AS COMP_ID FROM`
+        },
+        end: {
+            pub: `,"YOULYU".CITE,"YOULYU".PUBLICATION PUB WHERE MAIN.ID=CITE.SUCCESSOR AND CITE.PREDECESSOR=PUB.PUBLICATION_ID GROUP BY MAIN.RN,PUB.TITLE`,
+            per: `,"YOULYU".PUBLISH,"YOULYU".NAME WHERE(MAIN.ID=PUBLISH.PERSON_ID)AND(PUBLISH.PERSON_ID=NAME.PERSON_ID)GROUP BY MAIN.RN,NAME.PERSON_ID`
         }
     }
 };
