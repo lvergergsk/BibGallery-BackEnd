@@ -1,7 +1,7 @@
 module.exports = {
     searchType: {
         pub: {
-            begin: `SELECT MAIN.* FROM "YOULYU".PUBLICATION MAIN`,
+            begin: `SELECT MAIN.* FROM "YOULYU".PUBLICATION MAIN`
         },
         per: {
             begin: `SELECT MAIN.PERSON_ID FROM "YOULYU".PUBLISH MAIN`,
@@ -24,7 +24,7 @@ module.exports = {
         end: `)`
     },
     publicationID: {
-        join: `AND(MAIN.PUBLICATION_ID=:publicationid)`,
+        join: `AND(MAIN.PUBLICATION_ID=:publicationid)`
     },
     personID: {
         pub: `AND(PUBLISH.PERSON_ID=:personid)AND(MAIN.PUBLICATION_ID=PUBLISH.PUBLICATION_ID)`,
@@ -49,7 +49,7 @@ module.exports = {
     publishTab: {
         append: `,"YOULYU".PUBLISH`,
         join: {
-            publication: `AND(MAIN.PUBLICATION_ID=PUB.PUBLICATION_ID)`,
+            publication: `AND(MAIN.PUBLICATION_ID=PUB.PUBLICATION_ID)`
         }
     },
     articleTab: {
@@ -58,11 +58,11 @@ module.exports = {
     },
     inproceedingTab: {
         append: `,"YOULYU".INPROCEEDING INP`,
-        inproceeding: `AND(((INP.CROSSREF=:proceedingid)AND(INP.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:proccedingid))`
+        inproceeding: `AND(((INP.CROSSREF=:proceedingid)AND(INP.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:proceedingid))`
     },
     incollectionTab: {
         append: `,"YOULYU".INCOLLECTION INC`,
-        incollection: `AND(((INP.CROSSREF=:bookid)AND(INC.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:bookid))`
+        incollection: `AND(((INC.CROSSREF=:bookid)AND(INC.PUBLICATION_ID=MAIN.PUBLICATION_ID))OR(MAIN.PUBLICATION_ID=:bookid))`
     },
     year: {
         begin: `AND(YEAR>=:yearbegin)`,
@@ -89,15 +89,15 @@ module.exports = {
             pub: `(SELECT RN,PUBLICATION_ID AS ID,TITLE,YEAR,TYPE FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`,
             per: `(SELECT RN,PERSON_ID AS ID FROM(SELECT ROWNUM AS RN,MAIN.* FROM(`
         },
-        end: `)MAIN WHERE ROWNUM <= :offset+:num)WHERE RN > :offset)MAIN`
+        end: `)MAIN WHERE ROWNUM<=:offset+:num)WHERE RN>:offset)MAIN`
     },
     refine: {
-        pub:{
-            article:`SELECT MAIN.*,JOURNAL,PAGES,VOLUME,EE,URL FROM "YOULYU".ARTICLE PUB,`,
-            inproceeding:`SELECT MAIN.*,BOOKTITLE,EE,URL,CROSSREF FROM "YOULYU".INPROCEEDING PUB,`,
-            incollection:`SELECT MAIN.*,BOOKTITLE,PAGES,EE,URL,CROSSREF FROM "YOULYU".INCOLLECTION PUB,`,
-            proceeding:`SELECT MAIN.*,BOOKTITLE,VOLUME,PUBLISHER,ISBN,EE,URL FROM "YOULYU".PROCEEDING PUB,`,
-            book:`SELECT MAIN.*,PAGES,VOLUME,SERIES,PUBLISHER,ISBN,EE,URL FROM "YOULYU".BOOK PUB,`,
+        pub: {
+            article: `SELECT MAIN.*,JOURNAL,PAGES,VOLUME,EE,URL FROM "YOULYU".ARTICLE PUB,`,
+            inproceeding: `SELECT MAIN.*,BOOKTITLE,EE,URL,CROSSREF FROM "YOULYU".INPROCEEDING PUB,`,
+            incollection: `SELECT MAIN.*,BOOKTITLE,PAGES,EE,URL,CROSSREF FROM "YOULYU".INCOLLECTION PUB,`,
+            proceeding: `SELECT MAIN.*,BOOKTITLE,VOLUME,PUBLISHER,ISBN,EE,URL FROM "YOULYU".PROCEEDING PUB,`,
+            book: `SELECT MAIN.*,PAGES,VOLUME,SERIES,PUBLISHER,ISBN,EE,URL FROM "YOULYU".BOOK PUB,`,
             person: `SELECT MAIN.*,AFFILIATION,HOMEPAGE FROM "YOULYU".PERSON PER,`,
             begin: `SELECT * FROM "YOULYU".`,
             mid: ` PUB,`,
