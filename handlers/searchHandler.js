@@ -61,13 +61,13 @@ const handles = {
                 queryBuilder += pattern.publishTab.append;
             }
 
-            if (body.params['journal']) {
-                queryBuilder += pattern.articleTab.append;
-            } else if (body.params['proceedingid']) {
-                queryBuilder += pattern.inproceedingTab.append;
-            } else if (body.params['bookid']) {
-                queryBuilder += pattern.incollectionTab.append;
-            }
+            // if (body.params['journal']) {
+            //     queryBuilder += pattern.articleTab.append;
+            // } else if (body.params['proceedingid']) {
+            //     queryBuilder += pattern.inproceedingTab.append;
+            // } else if (body.params['bookid']) {
+            //     queryBuilder += pattern.incollectionTab.append;
+            // }
 
             let needPublication = false;
             if (
