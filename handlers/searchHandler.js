@@ -17,20 +17,17 @@ const handles = {
     connectDB: connectionFactory.doconnect,
     // connectDB: dummyConnect,
 
-    getBodyType: [
-        'getBody',
-        (body, cb) => cb(null, body["type"])
-    ],
+    getBodyType: ['getBody', (body, cb) => cb(null, body['type'])],
 
     getPubType: [
         'getBody',
         function(body, cb) {
-            if (body.params["journal"]) {
-                cb(null, ["article"]);
-            } else if(body.params["proceedingid"]) {
-                cb(null, ["procceding", "inproceeding"]);
-            } else if(body.params["bookid"]) {
-                cb(null, ["book", "incollection"]);
+            if (body.params['journal']) {
+                cb(null, ['article']);
+            } else if (body.params['proceedingid']) {
+                cb(null, ['proceeding', 'inproceeding']);
+            } else if (body.params['bookid']) {
+                cb(null, ['book', 'incollection']);
             } else {
                 let pubTypeList = _.uniq(_.filter(body.pubtype, x => pattern.pubType[x]));
                 if (pubTypeList.length == 0) {
@@ -60,7 +57,7 @@ const handles = {
             if (body.params['person']) {
                 // append name
                 queryBuilder += pattern.nameTab.append[body.type];
-            } else if ((body.type == 'pub' && body.params['personid'])) {
+            } else if (body.type == 'pub' && body.params['personid']) {
                 queryBuilder += pattern.publishTab.append;
             }
 
@@ -73,23 +70,27 @@ const handles = {
             }
 
             let needPublication = false;
-            if (body.type == "per"
-                && (body.params['yearbegin'] || body.params['yearend']
-                    || body.params['title'] || pubTypeList.length < 5
-                   || body['order']['type'] == 'year')) {
+            if (
+                body.type == 'per' &&
+                (body.params['yearbegin'] ||
+                    body.params['yearend'] ||
+                    body.params['title'] ||
+                    pubTypeList.length < 5 ||
+                    body['order']['type'] == 'year')
+            ) {
                 needPublication = true;
                 queryBuilder += pattern.publicationTab.append;
             }
 
             queryBuilder += pattern.whereClause;
 
-            if(needPublication) {
+            if (needPublication) {
                 queryBuilder += pattern.publishTab.join.publication;
             }
 
             if (pubTypeList.length < 5) {
                 queryBuilder += pattern.pubType.begin;
-                queryBuilder += "".concat(..._.map(pubTypeList, x => pattern.pubType[x]));
+                queryBuilder += ''.concat(..._.map(pubTypeList, x => pattern.pubType[x]));
                 queryBuilder += pattern.pubType.end;
             }
 
@@ -121,7 +122,7 @@ const handles = {
                 queryBuilder += pattern.year.end;
             }
 
-            if(body.type == 'per') {
+            if (body.type == 'per') {
                 queryBuilder += pattern.searchType.per.end;
             }
 
@@ -141,23 +142,33 @@ const handles = {
         }
     ],
 
-    countRecord: ['buildQuery', 'connectDB', function([queryBuilder, params], conn, cb){
-        console.log("Count: " + pattern.count.begin+queryBuilder+pattern.count.end);
-        conn.execute(pattern.count.begin+queryBuilder+pattern.count.end, params, (err, result) => {
-            if (err) {
-                cb(err);
-            } else {
-                console.log(result['rows']);
-                cb(null, result['rows'][0]["CNT"]);
-            }
-        });
-    }],
+    countRecord: [
+        'buildQuery',
+        'connectDB',
+        function([queryBuilder, params], conn, cb) {
+            console.log('Count: ' + pattern.count.begin + queryBuilder + pattern.count.end);
+            conn.execute(
+                pattern.count.begin + queryBuilder + pattern.count.end,
+                params,
+                (err, result) => {
+                    if (err) {
+                        cb(err);
+                    } else {
+                        console.log(result['rows']);
+                        cb(null, result['rows'][0]['CNT']);
+                    }
+                }
+            );
+        }
+    ],
 
-    paginateQuery: ['getBodyType',
-                    'buildQuery',
-                    function(bodyType, [queryBuilder, params], cb) {
-                        cb(null, pattern.page.begin[bodyType] + queryBuilder + pattern.page.end, params);
-                    }],
+    paginateQuery: [
+        'getBodyType',
+        'buildQuery',
+        function(bodyType, [queryBuilder, params], cb) {
+            cb(null, pattern.page.begin[bodyType] + queryBuilder + pattern.page.end, params);
+        }
+    ],
 
     findPerson: [
         'getBodyType',
@@ -165,19 +176,21 @@ const handles = {
         'connectDB',
         function(bodyType, [queryBuilder, params], conn, cb) {
             // console.log(pattern.refine.author.begin + pattern.page.begin + queryBuilder + pattern.page.end + pattern.refine.author.end);
-            if(bodyType == 'per') {
+            if (bodyType == 'per') {
                 cb(null, []);
             } else {
-                conn.execute(pattern.refine.author.begin +
-                             queryBuilder + pattern.refine.author.end, params,
-                             (err, result) => {
-                                 if (err) {
-                                     cb(err);
-                                 } else {
-                                     console.log("Person Found.");
-                                     cb(null, result['rows']);
-                                 }
-                             });
+                conn.execute(
+                    pattern.refine.author.begin + queryBuilder + pattern.refine.author.end,
+                    params,
+                    (err, result) => {
+                        if (err) {
+                            cb(err);
+                        } else {
+                            console.log('Person Found.');
+                            cb(null, result['rows']);
+                        }
+                    }
+                );
             }
         }
     ],
@@ -191,7 +204,12 @@ const handles = {
                 (error, result) =>
                     async.mapValues(
                         result,
-                        (v, k, callback) => async.map(v, (x, c) => c(null, {NAME: x['AUTHOR'], ID: x["AUTHOR_ID"]}), callback),
+                        (v, k, callback) =>
+                            async.map(
+                                v,
+                                (x, c) => c(null, { NAME: x['AUTHOR'], ID: x['AUTHOR_ID'] }),
+                                callback
+                            ),
                         cb
                     )
             );
@@ -202,27 +220,32 @@ const handles = {
         'getBodyType',
         'paginateQuery',
         function(bodyType, [queryBuilder, params], cb) {
-            if(bodyType == 'per') {
+            if (bodyType == 'per') {
                 cb(null, []);
             } else {
-                connectionFactory.doconnect(
-                    (error, conn) => {
-                        if(error)
-                            cb(error);
-                        else {
-                            conn.execute(pattern.refine.citation.begin + queryBuilder + pattern.refine.citation.end, params, (err, result) => {
+                connectionFactory.doconnect((error, conn) => {
+                    if (error) cb(error);
+                    else {
+                        conn.execute(
+                            pattern.refine.citation.begin +
+                                queryBuilder +
+                                pattern.refine.citation.end,
+                            params,
+                            (err, result) => {
                                 connectionFactory.dorelease(conn);
                                 if (err) {
                                     cb(err);
                                 } else {
-                                    console.log("Citation Found.");
+                                    console.log('Citation Found.');
                                     cb(null, result['rows']);
                                 }
-                            });
-                        }
-                    });
+                            }
+                        );
+                    }
+                });
             }
-        }],
+        }
+    ],
 
     refineCitation: [
         'findCitation',
@@ -233,7 +256,8 @@ const handles = {
                 (error, result) =>
                     async.mapValues(
                         result,
-                        (v, k, callback) => async.map(v, (x, c) => c(null, x['CITATION']), callback),
+                        (v, k, callback) =>
+                            async.map(v, (x, c) => c(null, x['CITATION']), callback),
                         cb
                     )
             );
@@ -246,40 +270,41 @@ const handles = {
         'getPubType',
         function(bodyType, [queryBuilder, params], pubTypeList, cb) {
             const refine = function(pubType, callback) {
-                console.log(pubType + ": " +
+                console.log(
+                    pubType +
+                        ': ' +
+                        // pattern.refine.pub.begin +
+                        // pubType.toUpperCase() +
+                        pattern.refine.pub[pubType] +
+                        queryBuilder +
+                        pattern.refine.pub.end[bodyType]
+                );
+                connectionFactory.doconnect((error, conn) => {
+                    if (error) {
+                        callback(error);
+                    } else {
+                        conn.execute(
                             // pattern.refine.pub.begin +
-                            // pubType.toUpperCase() +
+                            //     pubType.toUpperCase() +
+                            //     pattern.refine.pub.mid +
                             pattern.refine.pub[pubType] +
-                            queryBuilder +
-                            pattern.refine.pub.end[bodyType]
-                           );
-                connectionFactory.doconnect(
-                    (error, conn) => {
-                        if(error) {
-                            cb(error);
-                        } else {
-                            conn.execute(
-                                // pattern.refine.pub.begin +
-                                //     pubType.toUpperCase() +
-                                //     pattern.refine.pub.mid +
-                                pattern.refine.pub[pubType] +
-                                    queryBuilder +
-                                    pattern.refine.pub.end[bodyType],
-                                params,
-                                (err, result) => {
-                                    connectionFactory.dorelease(conn);
-                                    if (err) {
-                                        callback(err);
-                                    } else {
-                                        console.log(pubType.toUpperCase() + " Found");
-                                        callback(null, result['rows']);
-                                    }
+                                queryBuilder +
+                                pattern.refine.pub.end[bodyType],
+                            params,
+                            (err, result) => {
+                                connectionFactory.dorelease(conn);
+                                if (err) {
+                                    callback(err);
+                                } else {
+                                    console.log(pubType.toUpperCase() + ' Found');
+                                    callback(null, result['rows']);
                                 }
-                            );
-                        }
-                    });
+                            }
+                        );
+                    }
+                });
             };
-            if(bodyType == 'per') {
+            if (bodyType == 'per') {
                 refine('person', (err, result) => {
                     cb(err, result);
                 });
